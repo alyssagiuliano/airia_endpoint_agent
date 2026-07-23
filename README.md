@@ -1,8 +1,6 @@
 # AI Discovery App - Sideloading & Testing the Agent (no MDM)
 
-> Part of **AI Discovery**. This is the hands-on companion to *AI Discovery App - Deployment & Operations* (the MDM-at-scale path) and *AI Discovery App - Admin User Guide*.
-
-**Audience:** an SE or a customer who wants to evaluate the airiad endpoint agent on a single Mac **without an MDM**. You will download the exact same artifacts an admin would push through Kandji/Intune/Jamf - the signed agent installer (`.pkg`) and the tenant's configuration profile (`.mobileconfig`) - but instead of uploading them to an MDM, you install them directly on a test laptop and confirm it reports into the tenant that generated them.
+**Audience:** anyone who wants to evaluate the airiad endpoint agent on a single Mac **without an MDM**. You will download the exact same artifacts an admin would push through Kandji/Intune/Jamf - the signed agent installer (`.pkg`) and the tenant's configuration profile (`.mobileconfig`) - but instead of uploading them to an MDM, you install them directly on a test laptop and confirm it reports into the tenant that generated them.
 
 > **Why this works.** The agent is enrolled entirely by a managed-preferences configuration profile - it reads `BackendUrl` and `ApiKey` from `/Library/Managed Preferences/com.airia.airiad.plist` and auto-enrolls. A configuration profile installed by hand (device scope) populates that same path exactly like an MDM-delivered one. So "sideloading" is just the admin flow with a local install step swapped in for the MDM upload - no code, no special build, same artifacts, same tenant.
 
@@ -17,13 +15,12 @@
 - [Optional - test policy enforcement (AI Gateway rewrite)](#optional---test-policy-enforcement-ai-gateway-rewrite)
 - [Gotchas](#gotchas)
 - [Cleanup / uninstall](#cleanup--uninstall)
-- [Appendix - engineers: fast local iteration](#appendix---engineers-fast-local-iteration)
 
 ## Prerequisites
 
 - A test **Mac** you have **admin** rights on (installing a pkg and a device profile both require admin auth). Use a scratch / non-critical machine - the agent will rewrite AI-client configs if you test enforce mode.
 - Access to the **Airia platform UI** for the target tenant, with permission to run the endpoint-agent MDM wizard on the Integrations page.
-- The tenant should already have devices able to report (i.e. the agent feature is enabled for it). If you are the one enabling it, do that first per the Admin User Guide.
+- The tenant should already have devices able to report (i.e. the agent feature is enabled for it).
 
 ## Step 1 - Download the artifacts from the platform UI
 
@@ -101,7 +98,7 @@ airiad policy --verbose             # expect "<- 200 OK" and the tenant's policy
 
 ## Optional - test policy enforcement (AI Gateway rewrite)
 
-If you want to see the agent actually rewrite a client config, author an `enforce` policy for the tenant (see *AI Discovery App - Applying a Policy (AI Gateway Rewrite)*), then on the laptop:
+If you want to see the agent actually rewrite a client config, author an `enforce` policy for the tenant, then on the laptop:
 
 ```bash
 launchctl kickstart -k gui/$(id -u)/com.airia.airiad   # fetch the enforce policy + reconcile
@@ -125,9 +122,5 @@ Restart Claude Code afterwards so it re-reads the env vars and routes through th
 
 1. **Remove the configuration profile:** System Settings -> General -> Device Management -> select the Airia profile -> **Remove** (admin auth). This deletes the managed-prefs file; the agent will no longer be enrolled.
 2. **Stop the agent:** `launchctl bootout gui/$(id -u)/com.airia.airiad`.
-3. **Revert AI-client configs + wipe agent state:** from a clone of the repo, run `tools/airiad-reset.sh --apply` (restores each client config from the agent's oldest `.bak` backup and clears `~/.airiad/`). Or manually remove `ANTHROPIC_BASE_URL` / `ANTHROPIC_CUSTOM_HEADERS` from `~/.claude/settings.json` and restart Claude Code.
+3. **Revert AI-client configs + wipe agent state:** manually remove `ANTHROPIC_BASE_URL` / `ANTHROPIC_CUSTOM_HEADERS` from `~/.claude/settings.json`, restart Claude Code, and clear `~/.airiad/`.
 4. **Remove the binary (optional):** `sudo rm -rf /usr/local/bin/airiad /usr/local/share/airiad /Library/LaunchAgents/com.airia.airiad.plist`.
-
-## Appendix - engineers: fast local iteration
-
-The flow above uses the **signed, platform-generated** artifacts and is the right path for SEs and customers. Engineers iterating on the agent against a **local backend** (e.g. a local workstation stack) can instead sideload a locally-built unsigned binary as a user LaunchAgent and `airiad enroll` to the local backend directly - that bypasses the pkg/profile entirely. Those working notes (including the Local-Network-permission deep dive) live in the repo at `local/confluence/macos-sideload-test-runbook.md`; they are dev-loop notes, not the customer path.
