@@ -122,5 +122,5 @@ Restart Claude Code afterwards so it re-reads the env vars and routes through th
 
 1. **Remove the configuration profile:** System Settings -> General -> Device Management -> select the Airia profile -> **Remove** (admin auth). This deletes the managed-prefs file; the agent will no longer be enrolled.
 2. **Stop the agent:** `launchctl bootout gui/$(id -u)/com.airia.airiad`.
-3. **Revert AI-client configs + wipe agent state:** manually remove `ANTHROPIC_BASE_URL` / `ANTHROPIC_CUSTOM_HEADERS` from `~/.claude/settings.json`, restart Claude Code, and clear `~/.airiad/`.
+3. **Revert AI-client configs + wipe agent state:** manually undo any base-URL/custom-header overrides the agent wrote into your AI client's config (whichever client you tested enforce mode against), restart that client, and clear `~/.airiad/`.
 4. **Remove the binary (optional):** `sudo rm -rf /usr/local/bin/airiad /usr/local/share/airiad /Library/LaunchAgents/com.airia.airiad.plist`.
