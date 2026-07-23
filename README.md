@@ -27,9 +27,16 @@
 This is identical to what an admin does before pushing to an MDM; you just stop at "download."
 
 1. In the platform, go to **Integrations** and open the **endpoint agent / MDM** wizard for your platform (Kandji, Intune, or Jamf).
+
+   ![Integrations page with the Mac device management connectors highlighted](images/1.png)
+
 2. Select **macOS** and walk the wizard for the target tenant. It produces two artifacts - download both:
    - the **agent installer**: `airiad.pkg` (signed + notarized by Airia, so Gatekeeper accepts it), and
    - the **macOS configuration profile**: a `.mobileconfig` that carries this tenant's `BackendUrl` + `ApiKey` as managed preferences.
+
+   ![Setup wizard - choose Mac and the generate setup files method](images/2.png)
+
+   ![Setup wizard - create an API key and download the .mobileconfig and airiad.pkg](images/3.png)
 
 > **Note:** The `.mobileconfig` contains a tenant-scoped API key. Treat the file as a secret; don't commit it or share it broadly. It only grants the agent's scopes (findings ingest + policy fetch) for that one tenant.
 
